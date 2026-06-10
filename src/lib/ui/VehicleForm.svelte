@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { BRAND_NAMES, modelsForBrand } from '$lib/domain/car-data';
 	import type { OdometerUnit, Vehicle } from '$lib/domain/types';
+	import Autocomplete from './Autocomplete.svelte';
 
 	export interface VehicleFormValues {
 		name: string;
@@ -65,22 +67,14 @@
 	</label>
 
 	<div class="grid grid-cols-2 gap-3">
-		<label class="block">
+		<div>
 			<span class="mb-1 block text-sm font-medium text-ink-soft">Make</span>
-			<input
-				bind:value={make}
-				placeholder="VW"
-				class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-			/>
-		</label>
-		<label class="block">
+			<Autocomplete bind:value={make} options={BRAND_NAMES} placeholder="Volkswagen" />
+		</div>
+		<div>
 			<span class="mb-1 block text-sm font-medium text-ink-soft">Model</span>
-			<input
-				bind:value={model}
-				placeholder="Golf"
-				class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-			/>
-		</label>
+			<Autocomplete bind:value={model} options={modelsForBrand(make)} placeholder="Golf" />
+		</div>
 	</div>
 
 	<div class="grid grid-cols-2 gap-3">

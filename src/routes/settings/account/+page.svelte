@@ -9,7 +9,6 @@
 		isPushEnabled,
 		pushSupported
 	} from '$lib/sync/push-subscribe';
-	import { getSetting } from '$lib/db/repo';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 
 	let email = $state('');
@@ -66,8 +65,7 @@
 			await disablePush();
 			pushOn = false;
 		} else {
-			const days = await getSetting('mileageReminderDays', 14);
-			const res = await enablePush(days);
+			const res = await enablePush();
 			if (res.error) pushError = res.error;
 			else pushOn = true;
 		}
@@ -98,32 +96,6 @@
 			Sync now
 		</button>
 	</section>
-	<section class="mb-4 rounded-2xl border border-line bg-card p-4">
-		<h2 class="text-sm font-medium">Push reminders</h2>
-		{#if !pushSupported() && isIOSBrowserTab()}
-			<p class="mt-0.5 text-xs text-ink-faint">
-				To get reminders on iPhone, first install the app: tap Share → "Add to Home Screen", then
-				enable notifications from the installed app.
-			</p>
-		{:else if !pushSupported()}
-			<p class="mt-0.5 text-xs text-ink-faint">Push notifications aren't supported here.</p>
-		{:else}
-			<p class="mt-0.5 mb-3 text-xs text-ink-faint">
-				A daily check notifies you when maintenance is due soon or overdue, and reminds you to log
-				your mileage.
-			</p>
-			<button
-				onclick={togglePush}
-				disabled={pushBusy}
-				class="w-full rounded-full py-2.5 text-sm font-medium active:scale-95 disabled:opacity-50 {pushOn
-					? 'border border-line bg-card text-ink-soft'
-					: 'bg-teal text-teal-soft'}"
-			>
-				{pushOn ? 'Disable notifications on this device' : 'Enable notifications'}
-			</button>
-			{#if pushError}<p class="mt-2 text-sm text-danger">{pushError}</p>{/if}
-		{/if}
-	</section>
 	<p class="mb-4 text-xs text-ink-faint">
 		Your data syncs to this account. Sign in with the same email on another device to keep them in
 		sync.
@@ -138,8 +110,8 @@
 	<p class="mt-2 text-center text-xs text-ink-faint">Local data stays on this device.</p>
 {:else if stage === 'email'}
 	<p class="mb-4 text-sm text-ink-soft">
-		Create a free account (or sign back in) to sync your vehicles across devices and enable push
-		reminders. No password — we email you a 6-digit code.
+		Create a free account (or sign back in) to sync your vehicles across devices and keep push
+		reminders up to date automatically. No password — we email you a 6-digit code.
 	</p>
 	<form onsubmit={sendCode} class="flex flex-col gap-4">
 		<label class="block">
@@ -189,4 +161,39 @@
 			Use a different email
 		</button>
 	</form>
+{/if}
+
+{#if supabase && authState.ready}
+	<section class="mt-6 rounded-2xl border border-line bg-card p-4">
+		<h2 class="text-sm font-medium">Push reminders</h2>
+		{#if !pushSupported() && isIOSBrowserTab()}
+			<p class="mt-0.5 text-xs text-ink-faint">
+				To get reminders on iPhone, first install the app: tap Share → "Add to Home Screen", then
+				enable notifications from the installed app.
+			</p>
+		{:else if !pushSupported()}
+			<p class="mt-0.5 text-xs text-ink-faint">Push notifications aren't supported here.</p>
+		{:else}
+			<p class="mt-0.5 mb-3 text-xs text-ink-faint">
+				{#if authState.user}
+					A daily check notifies you when maintenance is due soon or overdue, and reminds you to log
+					your mileage.
+				{:else}
+					Works without an account: reminder dates are scheduled from this device whenever you use
+					the app — only the dates and message text leave the device. Signing in keeps them up to
+					date automatically instead.
+				{/if}
+			</p>
+			<button
+				onclick={togglePush}
+				disabled={pushBusy}
+				class="w-full rounded-full py-2.5 text-sm font-medium active:scale-95 disabled:opacity-50 {pushOn
+					? 'border border-line bg-card text-ink-soft'
+					: 'bg-teal text-teal-soft'}"
+			>
+				{pushOn ? 'Disable notifications on this device' : 'Enable notifications'}
+			</button>
+			{#if pushError}<p class="mt-2 text-sm text-danger">{pushError}</p>{/if}
+		{/if}
+	</section>
 {/if}

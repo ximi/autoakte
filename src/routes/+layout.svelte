@@ -4,6 +4,7 @@
 	import ReloadPrompt from '$lib/ui/ReloadPrompt.svelte';
 	import { startAuthListener } from '$lib/sync/auth.svelte';
 	import { startSyncTriggers } from '$lib/sync/engine.svelte';
+	import { startDeviceScheduleTriggers } from '$lib/sync/push-subscribe';
 
 	let { children } = $props();
 
@@ -12,9 +13,11 @@
 	$effect(() => {
 		const stopAuth = startAuthListener();
 		const stopSync = startSyncTriggers();
+		const stopSchedule = startDeviceScheduleTriggers();
 		return () => {
 			stopAuth();
 			stopSync();
+			stopSchedule();
 		};
 	});
 </script>

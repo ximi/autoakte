@@ -31,10 +31,19 @@ interface SubscriptionRow {
 export interface ReminderRunSummary {
 	users: number;
 	subscriptions: number;
+	deviceSchedules: number;
 	sent: number;
 	skipped: number;
 	expired: number;
 	errors: number;
+}
+
+interface DeviceScheduleRow {
+	device_token_hash: string;
+	endpoint: string;
+	p256dh: string;
+	auth: string;
+	schedule: { date: string; title: string; body: string }[];
 }
 
 function admin(): SupabaseClient | null {
@@ -87,6 +96,7 @@ export async function runReminders(): Promise<ReminderRunSummary | { skipped: st
 	const summary: ReminderRunSummary = {
 		users: byUser.size,
 		subscriptions: subs.length,
+		deviceSchedules: 0,
 		sent: 0,
 		skipped: 0,
 		expired: 0,
@@ -180,5 +190,57 @@ export async function runReminders(): Promise<ReminderRunSummary | { skipped: st
 		}
 	}
 
+	await runDeviceSchedules(client, today, summary);
 	return summary;
+}
+
+/**
+ * Accountless devices: send everything whose precomputed fire date has
+ * arrived, then prune those entries. The server holds no vehicle data here —
+ * just dates and message text the client uploaded.
+ */
+async function runDeviceSchedules(
+	client: SupabaseClient,
+	today: string,
+	summary: ReminderRunSummary
+): Promise<void> {
+	const { data, error } = await client.from('device_schedules').select('*');
+	if (error) throw new Error(`load device schedules: ${error.message}`);
+	const devices = (data ?? []) as DeviceScheduleRow[];
+	summary.deviceSchedules = devices.length;
+
+	for (const device of devices) {
+		const due = device.schedule.filter((e) => e.date <= today);
+		if (due.length === 0) {
+			summary.skipped += 1;
+			continue;
+		}
+		const remaining = device.schedule.filter((e) => e.date > today);
+		const title = due.length === 1 ? due[0].title : 'Maintenance reminders';
+		const body = due.map((e) => e.body).join('\n');
+
+		try {
+			await webpush.sendNotification(
+				{ endpoint: device.endpoint, keys: { p256dh: device.p256dh, auth: device.auth } },
+				JSON.stringify({ title, body, url: '/' })
+			);
+			await client
+				.from('device_schedules')
+				.update({ schedule: remaining, updated_at: new Date().toISOString() })
+				.eq('device_token_hash', device.device_token_hash);
+			summary.sent += 1;
+		} catch (e) {
+			const status = (e as { statusCode?: number }).statusCode;
+			if (status === 404 || status === 410) {
+				await client
+					.from('device_schedules')
+					.delete()
+					.eq('device_token_hash', device.device_token_hash);
+				summary.expired += 1;
+			} else {
+				console.error('reminders: device push failed', e);
+				summary.errors += 1;
+			}
+		}
+	}
 }

@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './client';
 import { resetSyncCheckpoint, syncNow } from './engine.svelte';
+import { migrateAnonymousPushToAccount } from './push-subscribe';
 
 export const authState = $state({
 	user: null as User | null,
@@ -38,7 +39,10 @@ export async function verifyCode(email: string, token: string): Promise<{ error:
 	// account, or the previous session may have synced to a different one.
 	await resetSyncCheckpoint();
 	const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-	if (!error) void syncNow();
+	if (!error) {
+		void syncNow();
+		void migrateAnonymousPushToAccount();
+	}
 	return { error: error?.message ?? null };
 }
 

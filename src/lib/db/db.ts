@@ -8,6 +8,8 @@ export interface Settings {
 	onboardingDone: boolean;
 	/** Per-table sync pull cursors (max server_updated_at seen). */
 	lastPullCursors: Record<string, string>;
+	/** Bearer secret identifying this device's accountless push schedule. */
+	pushDeviceToken: string;
 }
 
 export interface SettingRow<K extends keyof Settings = keyof Settings> {

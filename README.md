@@ -3,8 +3,10 @@
 A local-first PWA for tracking routine car maintenance across multiple vehicles, with due-date/mileage reminders.
 
 - **Local-first:** everything lives in IndexedDB; the app is fully functional offline with no account.
-- **Optional account** (email + 6-digit OTP code via Supabase) adds multi-device sync and push reminders. Signing in with the same email on a second device is the pairing mechanism.
-- **Reminders:** a daily Vercel cron recomputes due states server-side (same TypeScript engine the client uses) and sends Web Push digests — when an item enters _due soon_, when it becomes _overdue_, a weekly re-ping while overdue, plus a periodic "log your mileage" prompt.
+- **Optional account** (email + 6-digit OTP code via Supabase) adds multi-device sync and self-correcting push reminders. Signing in with the same email on a second device is the pairing mechanism.
+- **Reminders:** a daily Vercel cron sends Web Push digests — when an item enters _due soon_, when it becomes _overdue_, a weekly re-ping while overdue, plus a periodic "log your mileage" prompt. Two paths:
+  - **Signed in:** the cron recomputes due states server-side from synced data (same TypeScript engine the client uses), so reminders self-correct daily.
+  - **Signed out:** the app precomputes upcoming notification dates locally on every use and uploads only dates + message text under an anonymous device token (sha256-hashed server-side, deny-all RLS, RPC-only access). No vehicle data reaches the server; mileage-based projections drift until the app is next opened.
 
 ## Stack
 

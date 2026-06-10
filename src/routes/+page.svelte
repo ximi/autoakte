@@ -59,7 +59,7 @@
 
 <header class="flex items-center justify-between pt-5 pb-4">
 	<div class="flex items-center gap-2.5">
-		<img src="/icons/logo-128.png" alt="" class="h-8 w-8" />
+		<img src="/icons/logo-128.png" alt="" class="h-16 w-16" />
 		<h1 class="text-xl font-semibold">{APP_NAME}</h1>
 	</div>
 	<a

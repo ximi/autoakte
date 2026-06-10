@@ -4,6 +4,7 @@
 
 import { db, type AppDB, type Settings, type SyncedTableName } from './db';
 import type { SyncStamps } from '$lib/domain/types';
+import { emitLocalWrite } from '$lib/sync/bus';
 
 type Row<T extends SyncedTableName> = AppDB[T] extends {
 	get(key: string): Promise<infer R | undefined>;
@@ -25,6 +26,7 @@ export async function create<T extends SyncedTableName>(
 	const id = crypto.randomUUID();
 	const row = { ...data, id, createdAt: now, updatedAt: now, deleted: 0, pendingSync: 1 };
 	await db.table(table).add(row as Row<T>);
+	emitLocalWrite();
 	return id;
 }
 
@@ -34,11 +36,13 @@ export async function update<T extends SyncedTableName>(
 	patch: Partial<NewRow<T>>
 ): Promise<void> {
 	await db.table(table).update(id, { ...patch, updatedAt: nowISO(), pendingSync: 1 });
+	emitLocalWrite();
 }
 
 /** Tombstone, never a hard delete — deletions must propagate through sync. */
 export async function remove(table: SyncedTableName, id: string): Promise<void> {
 	await db.table(table).update(id, { deleted: 1, updatedAt: nowISO(), pendingSync: 1 });
+	emitLocalWrite();
 }
 
 /** Tombstones a vehicle and everything belonging to it. */
@@ -54,6 +58,7 @@ export async function removeVehicle(vehicleId: string): Promise<void> {
 			await db.mileageEntries.where('vehicleId').equals(vehicleId).modify(stamp);
 		}
 	);
+	emitLocalWrite();
 }
 
 export async function getSetting<K extends keyof Settings>(

@@ -2,6 +2,7 @@
 	import { APP_NAME } from '$lib/constants';
 	import { db, SYNCED_TABLES } from '$lib/db/db';
 	import { getSetting, setSetting } from '$lib/db/repo';
+	import { authState } from '$lib/sync/auth.svelte';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 
 	let reminderDays = $state(14);
@@ -58,13 +59,22 @@
 	</div>
 </section>
 
-<section class="mb-4 rounded-2xl border border-line bg-card p-4">
-	<h2 class="text-sm font-medium">Sync & notifications</h2>
-	<p class="mt-0.5 text-xs text-ink-faint">
-		Coming soon: an optional account for multi-device sync and push reminders. All data currently
-		lives only on this device.
-	</p>
-</section>
+<a
+	href="/settings/account"
+	class="mb-4 block rounded-2xl border border-line bg-card p-4 active:scale-[0.99]"
+>
+	<div class="flex items-center justify-between gap-2">
+		<div>
+			<h2 class="text-sm font-medium">Account & sync</h2>
+			<p class="mt-0.5 text-xs text-ink-faint">
+				{authState.user
+					? `Signed in as ${authState.user.email}`
+					: 'Optional — sync across devices and enable push reminders.'}
+			</p>
+		</div>
+		<span class="text-ink-faint">›</span>
+	</div>
+</a>
 
 <section class="rounded-2xl border border-line bg-card p-4">
 	<h2 class="mb-3 text-sm font-medium">Your data</h2>

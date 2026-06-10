@@ -3,10 +3,21 @@
 	import favicon from '$lib/assets/favicon.svg';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import ReloadPrompt from '$lib/ui/ReloadPrompt.svelte';
+	import { startAuthListener } from '$lib/sync/auth.svelte';
+	import { startSyncTriggers } from '$lib/sync/engine.svelte';
 
 	let { children } = $props();
 
 	const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : '');
+
+	$effect(() => {
+		const stopAuth = startAuthListener();
+		const stopSync = startSyncTriggers();
+		return () => {
+			stopAuth();
+			stopSync();
+		};
+	});
 </script>
 
 <svelte:head>

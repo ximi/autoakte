@@ -6,7 +6,8 @@ export interface Settings {
 	deviceId: string;
 	mileageReminderDays: number;
 	onboardingDone: boolean;
-	lastPullCursor: string;
+	/** Per-table sync pull cursors (max server_updated_at seen). */
+	lastPullCursors: Record<string, string>;
 }
 
 export interface SettingRow<K extends keyof Settings = keyof Settings> {

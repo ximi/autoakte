@@ -38,6 +38,7 @@ export default defineConfig({
 				]
 			},
 			workbox: {
+				importScripts: ['push-sw.js'],
 				globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
 				// Offline deep links fall back to the prerendered app shell at /;
 				// the client router then renders the actual route from IndexedDB.

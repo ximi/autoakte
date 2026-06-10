@@ -2,6 +2,14 @@
 	import { supabase } from '$lib/sync/client';
 	import { authState, requestCode, signOut, verifyCode } from '$lib/sync/auth.svelte';
 	import { syncNow, syncStatus } from '$lib/sync/engine.svelte';
+	import {
+		disablePush,
+		enablePush,
+		isIOSBrowserTab,
+		isPushEnabled,
+		pushSupported
+	} from '$lib/sync/push-subscribe';
+	import { getSetting } from '$lib/db/repo';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 
 	let email = $state('');
@@ -45,6 +53,26 @@
 			return `Last synced ${new Date(syncStatus.lastSyncAt).toLocaleTimeString()}`;
 		return 'Not synced yet';
 	}
+
+	let pushOn = $state(false);
+	let pushBusy = $state(false);
+	let pushError = $state('');
+	isPushEnabled().then((v) => (pushOn = v));
+
+	async function togglePush() {
+		pushBusy = true;
+		pushError = '';
+		if (pushOn) {
+			await disablePush();
+			pushOn = false;
+		} else {
+			const days = await getSetting('mileageReminderDays', 14);
+			const res = await enablePush(days);
+			if (res.error) pushError = res.error;
+			else pushOn = true;
+		}
+		pushBusy = false;
+	}
 </script>
 
 <svelte:head><title>Account & sync</title></svelte:head>
@@ -69,6 +97,32 @@
 		>
 			Sync now
 		</button>
+	</section>
+	<section class="mb-4 rounded-2xl border border-line bg-card p-4">
+		<h2 class="text-sm font-medium">Push reminders</h2>
+		{#if !pushSupported() && isIOSBrowserTab()}
+			<p class="mt-0.5 text-xs text-ink-faint">
+				To get reminders on iPhone, first install the app: tap Share → "Add to Home Screen", then
+				enable notifications from the installed app.
+			</p>
+		{:else if !pushSupported()}
+			<p class="mt-0.5 text-xs text-ink-faint">Push notifications aren't supported here.</p>
+		{:else}
+			<p class="mt-0.5 mb-3 text-xs text-ink-faint">
+				A daily check notifies you when maintenance is due soon or overdue, and reminds you to log
+				your mileage.
+			</p>
+			<button
+				onclick={togglePush}
+				disabled={pushBusy}
+				class="w-full rounded-full py-2.5 text-sm font-medium active:scale-95 disabled:opacity-50 {pushOn
+					? 'border border-line bg-card text-ink-soft'
+					: 'bg-teal text-teal-soft'}"
+			>
+				{pushOn ? 'Disable notifications on this device' : 'Enable notifications'}
+			</button>
+			{#if pushError}<p class="mt-2 text-sm text-danger">{pushError}</p>{/if}
+		{/if}
 	</section>
 	<p class="mb-4 text-xs text-ink-faint">
 		Your data syncs to this account. Sign in with the same email on another device to keep them in

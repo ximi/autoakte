@@ -3,6 +3,7 @@
 	import { db, SYNCED_TABLES } from '$lib/db/db';
 	import { getSetting, setSetting } from '$lib/db/repo';
 	import { authState } from '$lib/sync/auth.svelte';
+	import { updateReminderDays } from '$lib/sync/push-subscribe';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 
 	let reminderDays = $state(14);
@@ -11,6 +12,7 @@
 	async function setReminder(days: number) {
 		reminderDays = days;
 		await setSetting('mileageReminderDays', days);
+		await updateReminderDays(days);
 	}
 
 	async function exportJson() {

@@ -8,7 +8,7 @@ self.addEventListener('push', (event) => {
 		data = { body: event.data ? event.data.text() : '' };
 	}
 	event.waitUntil(
-		self.registration.showNotification(data.title || 'Garage', {
+		self.registration.showNotification(data.title || 'AutoAkte', {
 			body: data.body || '',
 			icon: '/icons/pwa-192.png',
 			badge: '/icons/pwa-192.png',

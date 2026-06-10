@@ -58,7 +58,10 @@
 <svelte:head><title>{APP_NAME}</title></svelte:head>
 
 <header class="flex items-center justify-between pt-5 pb-4">
-	<h1 class="text-xl font-semibold">{APP_NAME}</h1>
+	<div class="flex items-center gap-2.5">
+		<img src="/icons/logo-128.png" alt="" class="h-8 w-8" />
+		<h1 class="text-xl font-semibold">{APP_NAME}</h1>
+	</div>
 	<a
 		href="/settings"
 		aria-label="Settings"

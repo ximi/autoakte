@@ -1,4 +1,4 @@
-# Garage (working title)
+# AutoAkte
 
 A local-first PWA for tracking routine car maintenance across multiple vehicles, with due-date/mileage reminders.
 

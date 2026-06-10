@@ -1,6 +1,5 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 	import { pwaInfo } from 'virtual:pwa-info';
 	import ReloadPrompt from '$lib/ui/ReloadPrompt.svelte';
 	import { startAuthListener } from '$lib/sync/auth.svelte';
@@ -21,7 +20,7 @@
 </script>
 
 <svelte:head>
-	<link rel="icon" href={favicon} />
+	<link rel="icon" type="image/png" href="/icons/favicon-96.png" />
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- linkTag is plugin-generated, not user input -->
 	{@html webManifestLink}
 </svelte:head>

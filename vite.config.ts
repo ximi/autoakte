@@ -18,8 +18,8 @@ export default defineConfig({
 		SvelteKitPWA({
 			registerType: 'prompt',
 			manifest: {
-				name: 'Garage',
-				short_name: 'Garage',
+				name: 'AutoAkte',
+				short_name: 'AutoAkte',
 				description: 'Track and get reminded about your car maintenance.',
 				start_url: '/',
 				scope: '/',

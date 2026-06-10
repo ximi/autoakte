@@ -1,7 +1,7 @@
 // Imported into the generated service worker (workbox importScripts).
 // Every push must show a notification — iOS drops the subscription otherwise.
 self.addEventListener('push', (event) => {
-	let data = {};
+	let data;
 	try {
 		data = event.data ? event.data.json() : {};
 	} catch {

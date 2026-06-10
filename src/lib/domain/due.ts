@@ -32,7 +32,11 @@ function resolveAnchor(
 	let latest: ServiceRecord | null = null;
 	for (const r of records) {
 		if (r.deleted || r.itemId !== item.id) continue;
-		if (!latest || r.date > latest.date || (r.date === latest.date && r.odometer > latest.odometer)) {
+		if (
+			!latest ||
+			r.date > latest.date ||
+			(r.date === latest.date && r.odometer > latest.odometer)
+		) {
 			latest = r;
 		}
 	}

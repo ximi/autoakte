@@ -5,7 +5,9 @@
 import { db, type AppDB, type Settings, type SyncedTableName } from './db';
 import type { SyncStamps } from '$lib/domain/types';
 
-type Row<T extends SyncedTableName> = AppDB[T] extends { get(key: string): Promise<infer R | undefined> }
+type Row<T extends SyncedTableName> = AppDB[T] extends {
+	get(key: string): Promise<infer R | undefined>;
+}
 	? R
 	: never;
 
@@ -54,7 +56,9 @@ export async function removeVehicle(vehicleId: string): Promise<void> {
 	);
 }
 
-export async function getSetting<K extends keyof Settings>(key: K): Promise<Settings[K] | undefined>;
+export async function getSetting<K extends keyof Settings>(
+	key: K
+): Promise<Settings[K] | undefined>;
 export async function getSetting<K extends keyof Settings>(
 	key: K,
 	fallback: Settings[K]

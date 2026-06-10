@@ -53,7 +53,9 @@ describe('time-based scheduling', () => {
 describe('mileage-based scheduling', () => {
 	const item = (anchorOdometer: number, intervalKm = 15000) =>
 		makeItem({ id: 'i1', intervalKm, intervalMonths: null, anchorOdometer });
-	const at = (odometer: number) => [makeEntry({ odometer, recordedAt: '2026-06-09T00:00:00.000Z' })];
+	const at = (odometer: number) => [
+		makeEntry({ odometer, recordedAt: '2026-06-09T00:00:00.000Z' })
+	];
 
 	it('is ok far from the due odometer', () => {
 		const s = single(item(50000), [], at(55000));
@@ -69,13 +71,23 @@ describe('mileage-based scheduling', () => {
 	});
 
 	it('uses the 500 km floor for small intervals', () => {
-		const small = makeItem({ id: 'i1', intervalKm: 3000, intervalMonths: null, anchorOdometer: 50000 });
+		const small = makeItem({
+			id: 'i1',
+			intervalKm: 3000,
+			intervalMonths: null,
+			anchorOdometer: 50000
+		});
 		expect(single(small, [], at(52500)).status).toBe('due_soon');
 		expect(single(small, [], at(52400)).status).toBe('ok');
 	});
 
 	it('uses the 300 mi floor for mi vehicles', () => {
-		const small = makeItem({ id: 'i1', intervalKm: 2000, intervalMonths: null, anchorOdometer: 10000 });
+		const small = makeItem({
+			id: 'i1',
+			intervalKm: 2000,
+			intervalMonths: null,
+			anchorOdometer: 10000
+		});
 		expect(single(small, [], at(11700), 'mi').status).toBe('due_soon');
 		expect(single(small, [], at(11650), 'mi').status).toBe('ok');
 	});
@@ -87,7 +99,9 @@ describe('mileage-based scheduling', () => {
 	});
 
 	it('skips the mileage component without any odometer reading', () => {
-		const s = single(makeItem({ id: 'i1', intervalKm: 15000, intervalMonths: null, anchorOdometer: null }));
+		const s = single(
+			makeItem({ id: 'i1', intervalKm: 15000, intervalMonths: null, anchorOdometer: null })
+		);
 		expect(s.status).toBe('ok');
 		expect(s.dueOdometer).toBeNull();
 		expect(s.kmRemaining).toBeNull();
@@ -103,7 +117,11 @@ describe('combined intervals (whichever comes first)', () => {
 			anchorDate: '2026-01-01',
 			anchorOdometer: 50000
 		});
-		const s = single(item, [], [makeEntry({ odometer: 65500, recordedAt: '2026-06-09T00:00:00.000Z' })]);
+		const s = single(
+			item,
+			[],
+			[makeEntry({ odometer: 65500, recordedAt: '2026-06-09T00:00:00.000Z' })]
+		);
 		expect(s.status).toBe('overdue');
 		expect(s.dueDate).toBe('2027-01-01');
 	});
@@ -132,12 +150,19 @@ describe('anchor resolution', () => {
 			makeRecord({ itemId: 'i1', date: '2026-03-01', odometer: 55000 }),
 			makeRecord({ itemId: 'i1', date: '2026-03-01', odometer: 56000 })
 		];
-		const s = single(item, records, [makeEntry({ odometer: 57000, recordedAt: '2026-06-01T00:00:00.000Z' })]);
+		const s = single(item, records, [
+			makeEntry({ odometer: 57000, recordedAt: '2026-06-01T00:00:00.000Z' })
+		]);
 		expect(s.dueOdometer).toBe(66000);
 	});
 
 	it('ignores records of other items and deleted records', () => {
-		const item = makeItem({ id: 'i1', intervalKm: null, intervalMonths: 12, anchorDate: '2025-01-01' });
+		const item = makeItem({
+			id: 'i1',
+			intervalKm: null,
+			intervalMonths: 12,
+			anchorDate: '2025-01-01'
+		});
 		const records = [
 			makeRecord({ itemId: 'other', date: '2026-05-01' }),
 			makeRecord({ itemId: 'i1', date: '2026-05-01', deleted: 1 })
@@ -159,7 +184,12 @@ describe('anchor resolution', () => {
 	});
 
 	it('logging a service resets an overdue item', () => {
-		const item = makeItem({ id: 'i1', intervalKm: null, intervalMonths: 12, anchorDate: '2025-01-01' });
+		const item = makeItem({
+			id: 'i1',
+			intervalKm: null,
+			intervalMonths: 12,
+			anchorDate: '2025-01-01'
+		});
 		expect(single(item).status).toBe('overdue');
 		const fixed = single(item, [makeRecord({ itemId: 'i1', date: '2026-06-09', odometer: 60000 })]);
 		expect(fixed.status).toBe('ok');
@@ -168,7 +198,12 @@ describe('anchor resolution', () => {
 
 describe('projected mileage due date', () => {
 	it('projects from the estimated daily rate', () => {
-		const item = makeItem({ id: 'i1', intervalKm: 15000, intervalMonths: null, anchorOdometer: 50000 });
+		const item = makeItem({
+			id: 'i1',
+			intervalKm: 15000,
+			intervalMonths: null,
+			anchorOdometer: 50000
+		});
 		const entries = [
 			makeEntry({ odometer: 56000, recordedAt: '2026-04-01T00:00:00.000Z' }),
 			makeEntry({ odometer: 59000, recordedAt: '2026-06-10T00:00:00.000Z' })
@@ -199,8 +234,17 @@ describe('projected mileage due date', () => {
 	});
 
 	it('has no projection without a rate', () => {
-		const item = makeItem({ id: 'i1', intervalKm: 15000, intervalMonths: null, anchorOdometer: 50000 });
-		const s = single(item, [], [makeEntry({ odometer: 55000, recordedAt: '2026-06-01T00:00:00.000Z' })]);
+		const item = makeItem({
+			id: 'i1',
+			intervalKm: 15000,
+			intervalMonths: null,
+			anchorOdometer: 50000
+		});
+		const s = single(
+			item,
+			[],
+			[makeEntry({ odometer: 55000, recordedAt: '2026-06-01T00:00:00.000Z' })]
+		);
 		expect(s.projectedMileageDueDate).toBeNull();
 		expect(s.daysRemaining).toBeNull();
 	});
@@ -213,8 +257,18 @@ describe('computeDueStates housekeeping', () => {
 	});
 
 	it('worstStatus aggregates across items', () => {
-		const ok = makeItem({ id: 'a', intervalKm: null, intervalMonths: 12, anchorDate: '2026-06-01' });
-		const overdue = makeItem({ id: 'b', intervalKm: null, intervalMonths: 12, anchorDate: '2025-01-01' });
+		const ok = makeItem({
+			id: 'a',
+			intervalKm: null,
+			intervalMonths: 12,
+			anchorDate: '2026-06-01'
+		});
+		const overdue = makeItem({
+			id: 'b',
+			intervalKm: null,
+			intervalMonths: 12,
+			anchorDate: '2025-01-01'
+		});
 		const states = computeDueStates([ok, overdue], [], [], 'km', TODAY);
 		expect(worstStatus(states)).toBe('overdue');
 		expect(worstStatus([])).toBe('ok');

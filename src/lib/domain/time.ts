@@ -32,3 +32,11 @@ export function addMonths(date: string, months: number): string {
 export function addDays(date: string, days: number): string {
 	return format(parseUTC(date) + days * DAY_MS);
 }
+
+/** Today as the user perceives it — local timezone, not UTC. */
+export function todayLocal(now = new Date()): string {
+	const y = now.getFullYear();
+	const m = String(now.getMonth() + 1).padStart(2, '0');
+	const d = String(now.getDate()).padStart(2, '0');
+	return `${y}-${m}-${d}`;
+}

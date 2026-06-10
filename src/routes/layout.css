@@ -1,1 +1,36 @@
 @import 'tailwindcss';
+
+@theme {
+	--color-paper: #fafaf7;
+	--color-card: #ffffff;
+	--color-ink: #1e2125;
+	--color-ink-soft: #5f5e5a;
+	--color-ink-faint: #84827a;
+	--color-line: #e8e7e1;
+	--color-line-soft: #efeee9;
+
+	--color-teal: #0f6e56;
+	--color-teal-deep: #085041;
+	--color-teal-soft: #e1f5ee;
+
+	--color-warn: #854f0b;
+	--color-warn-strong: #ba7517;
+	--color-warn-soft: #faeeda;
+
+	--color-danger: #a32d2d;
+	--color-danger-soft: #fcebeb;
+
+	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+	background-color: var(--color-paper);
+	color: var(--color-ink);
+	-webkit-tap-highlight-color: transparent;
+}
+
+input,
+select,
+textarea {
+	font-size: 16px; /* prevents iOS Safari zoom-on-focus */
+}

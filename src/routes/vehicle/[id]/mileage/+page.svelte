@@ -7,6 +7,7 @@
 	import { formatDistance } from '$lib/format';
 	import { EMPTY_BUNDLE, vehicleBundle } from '$lib/queries';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const vehicleId = $derived(page.params.id!);
 	const data = live(() => vehicleBundle(vehicleId), EMPTY_BUNDLE);
@@ -31,14 +32,14 @@
 	}
 </script>
 
-<svelte:head><title>Enter mileage</title></svelte:head>
+<svelte:head><title>{t('enter_mileage')}</title></svelte:head>
 
-<PageHeader title="Enter mileage" back="/vehicle/{vehicleId}" />
+<PageHeader title={t('enter_mileage')} back="/vehicle/{vehicleId}" />
 
 <form onsubmit={save} class="flex flex-col gap-4">
 	<label class="block">
 		<span class="mb-1 block text-sm font-medium text-ink-soft">
-			Current odometer of {data.value.vehicle?.name ?? 'vehicle'} ({unit})
+			{t('current_odometer_of', { name: data.value.vehicle?.name ?? t('vehicle_fallback'), unit })}
 		</span>
 		<input
 			bind:value={odometer}
@@ -52,12 +53,14 @@
 	</label>
 
 	{#if known != null}
-		<p class="text-center text-xs text-ink-faint">Last known: {formatDistance(known, unit)}</p>
+		<p class="text-center text-xs text-ink-faint">
+			{t('last_known', { d: formatDistance(known, unit) })}
+		</p>
 	{/if}
 
 	{#if lower}
 		<p class="rounded-xl bg-warn-soft px-3 py-2 text-sm text-warn">
-			That's lower than the last known reading — double-check before saving.
+			{t('lower_warning')}
 		</p>
 	{/if}
 
@@ -65,6 +68,6 @@
 		type="submit"
 		class="mt-2 rounded-full bg-teal py-3 font-medium text-teal-soft active:scale-95"
 	>
-		Save reading
+		{t('save_reading')}
 	</button>
 </form>

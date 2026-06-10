@@ -10,6 +10,7 @@
 	import ItemForm, { type ItemFormValues } from '$lib/ui/ItemForm.svelte';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 
 	const vehicleId = $derived(page.params.id!);
 	const itemId = $derived(page.params.itemId!);
@@ -39,19 +40,22 @@
 	}
 
 	async function deleteItem() {
-		if (!confirm(`Delete "${item?.name}"? Its service history stays on the vehicle.`)) return;
+		if (!confirm(t('delete_item_confirm', { name: item?.name ?? '' }))) return;
 		await remove('maintenanceItems', itemId);
 		goto(`/vehicle/${vehicleId}`);
 	}
 </script>
 
-<svelte:head><title>{item?.name ?? 'Maintenance item'}</title></svelte:head>
+<svelte:head><title>{item?.name ?? t('maintenance_item')}</title></svelte:head>
 
 {#if item && vehicle}
 	<PageHeader title={item.name} back="/vehicle/{vehicleId}">
 		{#snippet action()}
 			{#if state}
-				<StatusBadge status={state.status} label={dueLabel(state, vehicle.odometerUnit)} />
+				<StatusBadge
+					status={state.status}
+					label={dueLabel(state, vehicle.odometerUnit, i18n.locale)}
+				/>
 			{/if}
 		{/snippet}
 	</PageHeader>
@@ -60,16 +64,18 @@
 		href="/vehicle/{vehicleId}/log?item={itemId}"
 		class="mb-6 block rounded-full bg-teal py-3 text-center font-medium text-teal-soft active:scale-95"
 	>
-		Log this service
+		{t('log_this_service')}
 	</a>
 
 	{#key item.id}
-		<ItemForm {item} unit={vehicle.odometerUnit} submitLabel="Save changes" onsubmit={save} />
+		<ItemForm {item} unit={vehicle.odometerUnit} submitLabel={t('save_changes')} onsubmit={save} />
 	{/key}
 
 	{#if history.length > 0}
 		<section class="mt-6 rounded-2xl border border-line bg-card p-4">
-			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">History</h2>
+			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">
+				{t('history')}
+			</h2>
 			<ul class="divide-y divide-line-soft">
 				{#each history as record (record.id)}
 					<li class="py-3">
@@ -101,9 +107,9 @@
 		onclick={deleteItem}
 		class="mt-8 w-full rounded-full border border-danger/30 py-3 text-sm font-medium text-danger active:scale-95"
 	>
-		Delete item
+		{t('delete_item')}
 	</button>
 {:else}
-	<PageHeader title="Maintenance item" back="/vehicle/{vehicleId}" />
-	<p class="text-sm text-ink-faint">Item not found.</p>
+	<PageHeader title={t('maintenance_item')} back="/vehicle/{vehicleId}" />
+	<p class="text-sm text-ink-faint">{t('item_not_found')}</p>
 {/if}

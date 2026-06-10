@@ -7,6 +7,7 @@
 	import { todayLocal } from '$lib/domain/time';
 	import type { DueStatus, ItemDueState } from '$lib/domain/types';
 	import { dueLabel, formatDistance } from '$lib/format';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 	import { allData, EMPTY_DATA } from '$lib/queries';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
 
@@ -41,10 +42,10 @@
 
 	function badgeFor(states: ItemDueState[], worst: DueStatus): string {
 		if (worst === 'overdue')
-			return `${states.filter((s) => s.status === 'overdue').length} overdue`;
+			return t('n_overdue', { n: states.filter((s) => s.status === 'overdue').length });
 		if (worst === 'due_soon')
-			return `${states.filter((s) => s.status === 'due_soon').length} due soon`;
-		return 'all good';
+			return t('n_due_soon', { n: states.filter((s) => s.status === 'due_soon').length });
+		return t('all_good');
 	}
 
 	let pickerOpen = $state(false);
@@ -64,7 +65,7 @@
 	</div>
 	<a
 		href="/settings"
-		aria-label="Settings"
+		aria-label={t('settings')}
 		class="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-card text-ink-soft active:scale-95"
 	>
 		<svg
@@ -107,21 +108,21 @@
 			</svg>
 		</div>
 		<div>
-			<p class="font-medium">No vehicles yet</p>
-			<p class="mt-1 text-sm text-ink-faint">Add your car to start tracking maintenance.</p>
+			<p class="font-medium">{t('no_vehicles_title')}</p>
+			<p class="mt-1 text-sm text-ink-faint">{t('no_vehicles_sub')}</p>
 		</div>
 		<a
 			href="/vehicle/new"
 			class="rounded-full bg-teal px-6 py-2.5 text-sm font-medium text-teal-soft active:scale-95"
 		>
-			Add your first vehicle
+			{t('add_first_vehicle')}
 		</a>
 	</div>
 {:else}
 	{#if attention.length > 0}
 		<section class="mb-4 rounded-2xl border border-line bg-card p-4">
 			<h2 class="mb-2 text-xs font-medium tracking-wide text-ink-faint uppercase">
-				Needs attention
+				{t('needs_attention')}
 			</h2>
 			<ul class="divide-y divide-line-soft">
 				{#each attention as s (s.itemId)}
@@ -134,7 +135,10 @@
 								<span class="block truncate text-sm">{itemName.get(s.itemId)}</span>
 								<span class="block text-xs text-ink-faint">{s.vehicle.name}</span>
 							</span>
-							<StatusBadge status={s.status} label={dueLabel(s, s.vehicle.odometerUnit)} />
+							<StatusBadge
+								status={s.status}
+								label={dueLabel(s, s.vehicle.odometerUnit, i18n.locale)}
+							/>
 						</a>
 					</li>
 				{/each}
@@ -155,10 +159,10 @@
 							{#if card.odometer != null}
 								{formatDistance(card.odometer, card.vehicle.odometerUnit)}
 								{#if card.rate != null}
-									· ~{Math.round(card.rate)} {card.vehicle.odometerUnit}/day
+									· {t('per_day', { n: Math.round(card.rate), unit: card.vehicle.odometerUnit })}
 								{/if}
 							{:else}
-								no mileage yet
+								{t('no_mileage_yet')}
 							{/if}
 						</p>
 					</div>
@@ -169,7 +173,7 @@
 	</div>
 
 	<a href="/vehicle/new" class="mt-3 block py-2 text-center text-sm font-medium text-teal">
-		+ Add vehicle
+		+ {t('add_vehicle')}
 	</a>
 
 	<div class="fixed inset-x-0 bottom-6 flex justify-center">
@@ -177,7 +181,7 @@
 			onclick={logMileage}
 			class="rounded-full bg-teal px-6 py-3 text-sm font-medium text-teal-soft shadow-lg active:scale-95"
 		>
-			Log mileage
+			{t('log_mileage')}
 		</button>
 	</div>
 
@@ -192,7 +196,7 @@
 				role="dialog"
 				aria-label="Choose vehicle"
 			>
-				<p class="mb-2 text-sm font-medium text-ink-soft">Log mileage for…</p>
+				<p class="mb-2 text-sm font-medium text-ink-soft">{t('log_mileage_for')}</p>
 				{#each cards as card (card.vehicle.id)}
 					<a
 						href="/vehicle/{card.vehicle.id}/mileage"

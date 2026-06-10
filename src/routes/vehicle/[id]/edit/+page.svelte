@@ -6,6 +6,7 @@
 	import { removeVehicle, update } from '$lib/db/repo';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 	import VehicleForm, { type VehicleFormValues } from '$lib/ui/VehicleForm.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const vehicleId = $derived(page.params.id!);
 	const vehicle = live(() => db.vehicles.get(vehicleId), undefined);
@@ -23,26 +24,25 @@
 	}
 
 	async function deleteVehicle() {
-		if (!confirm(`Delete ${vehicle.value?.name} and all its history? This cannot be undone.`))
-			return;
+		if (!confirm(t('delete_vehicle_confirm', { name: vehicle.value?.name ?? '' }))) return;
 		await removeVehicle(vehicleId);
 		goto('/');
 	}
 </script>
 
-<svelte:head><title>Edit vehicle</title></svelte:head>
+<svelte:head><title>{t('edit_vehicle')}</title></svelte:head>
 
-<PageHeader title="Edit vehicle" back="/vehicle/{vehicleId}" />
+<PageHeader title={t('edit_vehicle')} back="/vehicle/{vehicleId}" />
 
 {#if vehicle.value}
 	{#key vehicle.value.id}
-		<VehicleForm vehicle={vehicle.value} submitLabel="Save changes" onsubmit={save} />
+		<VehicleForm vehicle={vehicle.value} submitLabel={t('save_changes')} onsubmit={save} />
 	{/key}
 
 	<button
 		onclick={deleteVehicle}
 		class="mt-8 w-full rounded-full border border-danger/30 py-3 text-sm font-medium text-danger active:scale-95"
 	>
-		Delete vehicle
+		{t('delete_vehicle')}
 	</button>
 {/if}

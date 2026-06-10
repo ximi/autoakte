@@ -6,6 +6,7 @@ import { computeDueStates, DUE_SOON_DAYS } from './due';
 import { lastMileagePointDate, mileagePoints } from './mileage';
 import { addDays } from './time';
 import type { MaintenanceItem, MileageEntry, ServiceRecord, Vehicle } from './types';
+import { tr, type Locale } from '$lib/i18n/dict';
 
 export interface ScheduledNotification {
 	date: string; // YYYY-MM-DD — the cron sends it on the first run on/after this date
@@ -28,7 +29,8 @@ export function computeSchedule(
 	records: ServiceRecord[],
 	entries: MileageEntry[],
 	reminderDays: number,
-	today: string
+	today: string,
+	locale: Locale = 'en'
 ): ScheduledNotification[] {
 	const out: ScheduledNotification[] = [];
 
@@ -39,12 +41,14 @@ export function computeSchedule(
 		const states = computeDueStates(vItems, vRecords, vEntries, vehicle.odometerUnit, today);
 
 		for (const s of states) {
-			const name = vItems.find((i) => i.id === s.itemId)?.name ?? 'Maintenance';
+			const name =
+				vItems.find((i) => i.id === s.itemId)?.name ?? tr(locale, 'maintenance_fallback');
+			const params = { vehicle: vehicle.name, item: name };
 			if (s.status === 'overdue') {
 				out.push({
 					date: addDays(today, OVERDUE_REPING_DAYS),
-					title: 'Maintenance overdue',
-					body: `${vehicle.name}: ${name} is still overdue`
+					title: tr(locale, 'notif_overdue_title'),
+					body: tr(locale, 'notif_still_overdue', params)
 				});
 				continue;
 			}
@@ -52,14 +56,14 @@ export function computeSchedule(
 			if (s.status === 'ok') {
 				out.push({
 					date: addDays(today, Math.max(s.daysRemaining - DUE_SOON_DAYS, 1)),
-					title: 'Maintenance reminder',
-					body: `${vehicle.name}: ${name} is due soon`
+					title: tr(locale, 'notif_reminder_title'),
+					body: tr(locale, 'notif_due_soon', params)
 				});
 			}
 			out.push({
 				date: addDays(today, s.daysRemaining + 1),
-				title: 'Maintenance overdue',
-				body: `${vehicle.name}: ${name} is now overdue`
+				title: tr(locale, 'notif_overdue_title'),
+				body: tr(locale, 'notif_now_overdue', params)
 			});
 		}
 
@@ -67,8 +71,8 @@ export function computeSchedule(
 		const next = lastPoint ? addDays(lastPoint, reminderDays) : addDays(today, reminderDays);
 		out.push({
 			date: next <= today ? addDays(today, 1) : next,
-			title: 'Mileage check-in',
-			body: `Time to log the current mileage of ${vehicle.name}`
+			title: tr(locale, 'notif_mileage_title'),
+			body: tr(locale, 'notif_log_mileage', { vehicle: vehicle.name })
 		});
 	}
 

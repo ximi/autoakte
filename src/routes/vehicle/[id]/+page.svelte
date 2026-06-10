@@ -9,6 +9,7 @@
 	import { EMPTY_BUNDLE, vehicleBundle } from '$lib/queries';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
+	import { i18n, t } from '$lib/i18n/index.svelte';
 
 	const vehicleId = $derived(page.params.id!);
 	const data = live(() => vehicleBundle(vehicleId), EMPTY_BUNDLE);
@@ -39,7 +40,9 @@
 				kind: 'service' as const,
 				date: r.date,
 				sortKey: `${r.date}~${r.createdAt}`,
-				label: r.itemId ? (itemName.get(r.itemId) ?? 'Service') : (r.title ?? 'Service'),
+				label: r.itemId
+					? (itemName.get(r.itemId) ?? t('service_fallback'))
+					: (r.title ?? t('service_fallback')),
 				odometer: r.odometer,
 				cost: r.cost,
 				currency: r.currency
@@ -49,7 +52,7 @@
 				kind: 'mileage' as const,
 				date: toDateOnly(e.recordedAt),
 				sortKey: `${toDateOnly(e.recordedAt)}~${e.createdAt}`,
-				label: 'Odometer reading',
+				label: t('odometer_reading'),
 				odometer: e.odometer,
 				cost: null,
 				currency: null
@@ -67,49 +70,53 @@
 	);
 </script>
 
-<svelte:head><title>{vehicle?.name ?? 'Vehicle'}</title></svelte:head>
+<svelte:head><title>{vehicle?.name ?? t('vehicle_fallback')}</title></svelte:head>
 
 {#if vehicle}
 	<PageHeader title={vehicle.name} back="/">
 		{#snippet action()}
-			<a href="/vehicle/{vehicleId}/edit" class="text-sm font-medium text-teal">Edit</a>
+			<a href="/vehicle/{vehicleId}/edit" class="text-sm font-medium text-teal">{t('edit')}</a>
 		{/snippet}
 	</PageHeader>
 
 	<div class="mb-4 rounded-2xl border border-line bg-card p-4">
 		<p class="text-xs text-ink-faint">
-			{[vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(' ') || 'Odometer'}
+			{[vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(' ') || t('odometer')}
 		</p>
 		<p class="mt-1 text-2xl font-semibold">
 			{odometer != null ? formatDistance(odometer, vehicle.odometerUnit) : '—'}
 		</p>
 		{#if rate != null}
-			<p class="mt-0.5 text-xs text-ink-faint">~{Math.round(rate)} {vehicle.odometerUnit}/day</p>
+			<p class="mt-0.5 text-xs text-ink-faint">
+				{t('per_day', { n: Math.round(rate), unit: vehicle.odometerUnit })}
+			</p>
 		{/if}
 		<div class="mt-3 grid grid-cols-2 gap-2">
 			<a
 				href="/vehicle/{vehicleId}/mileage"
 				class="rounded-full border border-teal py-2 text-center text-sm font-medium text-teal active:scale-95"
 			>
-				Enter mileage
+				{t('enter_mileage')}
 			</a>
 			<a
 				href="/vehicle/{vehicleId}/log"
 				class="rounded-full bg-teal py-2 text-center text-sm font-medium text-teal-soft active:scale-95"
 			>
-				Log service
+				{t('log_service')}
 			</a>
 		</div>
 	</div>
 
 	<section class="mb-4 rounded-2xl border border-line bg-card p-4">
 		<div class="mb-1 flex items-center justify-between">
-			<h2 class="text-xs font-medium tracking-wide text-ink-faint uppercase">Maintenance</h2>
-			<a href="/vehicle/{vehicleId}/item/new" class="text-sm font-medium text-teal">+ Add</a>
+			<h2 class="text-xs font-medium tracking-wide text-ink-faint uppercase">{t('maintenance')}</h2>
+			<a href="/vehicle/{vehicleId}/item/new" class="text-sm font-medium text-teal"
+				>{t('add_short')}</a
+			>
 		</div>
 		{#if sortedItems.length === 0}
 			<p class="py-3 text-sm text-ink-faint">
-				No maintenance items yet — add what you want to track.
+				{t('no_items_yet')}
 			</p>
 		{:else}
 			<ul class="divide-y divide-line-soft">
@@ -122,7 +129,10 @@
 						>
 							<span class="min-w-0 truncate text-sm">{item.name}</span>
 							{#if s}
-								<StatusBadge status={s.status} label={dueLabel(s, vehicle.odometerUnit)} />
+								<StatusBadge
+									status={s.status}
+									label={dueLabel(s, vehicle.odometerUnit, i18n.locale)}
+								/>
 							{/if}
 						</a>
 					</li>
@@ -133,7 +143,9 @@
 
 	{#if history.length > 0}
 		<section class="rounded-2xl border border-line bg-card p-4">
-			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">History</h2>
+			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">
+				{t('history')}
+			</h2>
 			<ul class="divide-y divide-line-soft">
 				{#each history as entry (entry.id)}
 					<li class="py-3">
@@ -156,6 +168,6 @@
 		</section>
 	{/if}
 {:else}
-	<PageHeader title="Vehicle" back="/" />
-	<p class="text-sm text-ink-faint">Vehicle not found.</p>
+	<PageHeader title={t('vehicle_fallback')} back="/" />
+	<p class="text-sm text-ink-faint">{t('vehicle_not_found')}</p>
 {/if}

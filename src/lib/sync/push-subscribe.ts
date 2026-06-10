@@ -2,6 +2,7 @@ import { PUBLIC_VAPID_PUBLIC_KEY } from '$env/static/public';
 import { getSetting, setSetting } from '$lib/db/repo';
 import { computeSchedule } from '$lib/domain/local-schedule';
 import { todayLocal } from '$lib/domain/time';
+import { i18n, t } from '$lib/i18n/index.svelte';
 import { allData } from '$lib/queries';
 import { onLocalWrite } from './bus';
 import { supabase } from './client';
@@ -76,11 +77,19 @@ function subscriptionKeys(sub: PushSubscription): SubscriptionKeys | null {
  * upload only dates + message text, keyed by the device token.
  */
 async function uploadDeviceSchedule(keys: SubscriptionKeys): Promise<{ error: string | null }> {
-	if (!supabase) return { error: 'Sync is not configured.' };
+	if (!supabase) return { error: t('err_not_configured') };
 	const token = await getOrCreateDeviceToken();
 	const reminderDays = await getSetting('mileageReminderDays', 14);
 	const { vehicles, items, records, entries } = await allData();
-	const schedule = computeSchedule(vehicles, items, records, entries, reminderDays, todayLocal());
+	const schedule = computeSchedule(
+		vehicles,
+		items,
+		records,
+		entries,
+		reminderDays,
+		todayLocal(),
+		i18n.locale
+	);
 	const { error } = await supabase.rpc('upsert_device_schedule', {
 		device_token: token,
 		endpoint: keys.endpoint,
@@ -101,7 +110,8 @@ async function uploadAccountSubscription(
 			...keys,
 			device_label: navigator.userAgent.slice(0, 120),
 			enabled: true,
-			mileage_reminder_days: reminderDays
+			mileage_reminder_days: reminderDays,
+			locale: i18n.locale
 		},
 		{ onConflict: 'endpoint' }
 	);
@@ -110,10 +120,10 @@ async function uploadAccountSubscription(
 
 /** Must be called from a user gesture (iOS requirement). Works signed-out. */
 export async function enablePush(): Promise<{ error: string | null }> {
-	if (!supabase) return { error: 'Sync is not configured.' };
-	if (!pushSupported()) return { error: 'Push is not supported here.' };
+	if (!supabase) return { error: t('err_not_configured') };
+	if (!pushSupported()) return { error: t('err_push_unsupported') };
 	const permission = await Notification.requestPermission();
-	if (permission !== 'granted') return { error: 'Notification permission was denied.' };
+	if (permission !== 'granted') return { error: t('err_permission_denied') };
 
 	const reg = await navigator.serviceWorker.ready;
 	const sub = await reg.pushManager.subscribe({
@@ -121,7 +131,7 @@ export async function enablePush(): Promise<{ error: string | null }> {
 		applicationServerKey: applicationServerKey() as BufferSource
 	});
 	const keys = subscriptionKeys(sub);
-	if (!keys) return { error: 'Subscription is missing keys.' };
+	if (!keys) return { error: t('err_missing_keys') };
 
 	return (await isSignedIn()) ? uploadAccountSubscription(keys) : uploadDeviceSchedule(keys);
 }
@@ -165,6 +175,21 @@ export async function migrateAnonymousPushToAccount(): Promise<void> {
 	const token = await getSetting('pushDeviceToken');
 	if (token) await supabase.rpc('delete_device_schedule', { device_token: token });
 	await uploadAccountSubscription(keys);
+}
+
+/** Best-effort: keep the server-side notification language in step. */
+export async function syncLocaleToServer(): Promise<void> {
+	if (!supabase) return;
+	const sub = await getSubscription();
+	if (!sub) return;
+	if (await isSignedIn()) {
+		await supabase
+			.from('push_subscriptions')
+			.update({ locale: i18n.locale })
+			.eq('endpoint', sub.endpoint);
+	} else {
+		await refreshDeviceSchedule();
+	}
 }
 
 /** Best-effort: keep the server-side reminder interval in step with settings. */

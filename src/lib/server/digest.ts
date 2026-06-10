@@ -3,6 +3,7 @@
 
 import type { ItemDueState, OdometerUnit } from '$lib/domain/types';
 import { dueLabel } from '$lib/format';
+import { tr, type Locale } from '$lib/i18n/dict';
 
 export interface VehicleAttention {
 	vehicleName: string;
@@ -16,23 +17,24 @@ export interface VehicleAttention {
  */
 export function buildDigest(
 	attention: VehicleAttention[],
-	mileageCheckDue: boolean
+	mileageCheckDue: boolean,
+	locale: Locale = 'en'
 ): { title: string; body: string } | null {
 	const lines: string[] = [];
 	for (const v of attention) {
 		if (v.items.length === 0) continue;
 		const parts = v.items.map(({ name, state }) =>
 			state.status === 'overdue'
-				? `${name} overdue (${dueLabel(state, v.unit)})`
-				: `${name} due ${dueLabel(state, v.unit)}`
+				? tr(locale, 'digest_overdue', { item: name, label: dueLabel(state, v.unit, locale) })
+				: tr(locale, 'digest_due', { item: name, label: dueLabel(state, v.unit, locale) })
 		);
 		lines.push(`${v.vehicleName}: ${parts.join(' · ')}`);
 	}
-	if (mileageCheckDue) lines.push('Time to log your current mileage.');
+	if (mileageCheckDue) lines.push(tr(locale, 'digest_log_mileage'));
 	if (lines.length === 0) return null;
 	const overdue = attention.some((v) => v.items.some((i) => i.state.status === 'overdue'));
 	return {
-		title: overdue ? 'Maintenance overdue' : 'Maintenance reminder',
+		title: tr(locale, overdue ? 'notif_overdue_title' : 'notif_reminder_title'),
 		body: lines.join('\n')
 	};
 }

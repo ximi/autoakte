@@ -2,6 +2,7 @@
 	import { BRAND_NAMES, modelsForBrand } from '$lib/domain/car-data';
 	import type { OdometerUnit, Vehicle } from '$lib/domain/types';
 	import Autocomplete from './Autocomplete.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	export interface VehicleFormValues {
 		name: string;
@@ -57,29 +58,29 @@
 
 <form onsubmit={submit} class="flex flex-col gap-4">
 	<label class="block">
-		<span class="mb-1 block text-sm font-medium text-ink-soft">Name</span>
+		<span class="mb-1 block text-sm font-medium text-ink-soft">{t('field_name')}</span>
 		<input
 			bind:value={name}
 			required
-			placeholder="e.g. Golf VII"
+			placeholder={t('vehicle_name_placeholder')}
 			class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
 		/>
 	</label>
 
 	<div class="grid grid-cols-2 gap-3">
 		<div>
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Make</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('field_make')}</span>
 			<Autocomplete bind:value={make} options={BRAND_NAMES} placeholder="Volkswagen" />
 		</div>
 		<div>
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Model</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('field_model')}</span>
 			<Autocomplete bind:value={model} options={modelsForBrand(make)} placeholder="Golf" />
 		</div>
 	</div>
 
 	<div class="grid grid-cols-2 gap-3">
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Year</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('field_year')}</span>
 			<input
 				bind:value={year}
 				type="number"
@@ -92,7 +93,7 @@
 		</label>
 		<label class="block">
 			<span class="mb-1 block text-sm font-medium text-ink-soft"
-				>Plate <span class="font-normal text-ink-faint">(optional)</span></span
+				>{t('field_plate')} <span class="font-normal text-ink-faint">{t('optional')}</span></span
 			>
 			<input
 				bind:value={plate}
@@ -102,7 +103,7 @@
 	</div>
 
 	<fieldset>
-		<legend class="mb-1 block text-sm font-medium text-ink-soft">Odometer unit</legend>
+		<legend class="mb-1 block text-sm font-medium text-ink-soft">{t('odometer_unit')}</legend>
 		<div class="flex gap-2">
 			{#each ['km', 'mi'] as const as unit (unit)}
 				<button
@@ -122,7 +123,7 @@
 	{#if showOdometer}
 		<label class="block">
 			<span class="mb-1 block text-sm font-medium text-ink-soft"
-				>Current odometer ({odometerUnit})</span
+				>{t('current_odometer', { unit: odometerUnit })}</span
 			>
 			<input
 				bind:value={odometer}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MaintenanceItem, OdometerUnit } from '$lib/domain/types';
 	import { todayLocal } from '$lib/domain/time';
+	import { t } from '$lib/i18n/index.svelte';
 
 	export interface ItemFormValues {
 		name: string;
@@ -43,7 +44,7 @@
 	function submit(e: SubmitEvent) {
 		e.preventDefault();
 		if (intervalKm == null && intervalMonths == null) {
-			error = 'Set a distance interval, a time interval, or both.';
+			error = t('interval_required');
 			return;
 		}
 		error = '';
@@ -59,18 +60,20 @@
 
 <form onsubmit={submit} class="flex flex-col gap-4">
 	<label class="block">
-		<span class="mb-1 block text-sm font-medium text-ink-soft">Name</span>
+		<span class="mb-1 block text-sm font-medium text-ink-soft">{t('field_name')}</span>
 		<input
 			bind:value={name}
 			required
-			placeholder="e.g. Oil & filter change"
+			placeholder={t('item_name_placeholder')}
 			class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
 		/>
 	</label>
 
 	<div class="grid grid-cols-2 gap-3">
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Every … {unit}</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft"
+				>{t('every_distance', { unit })}</span
+			>
 			<input
 				bind:value={intervalKm}
 				type="number"
@@ -81,7 +84,7 @@
 			/>
 		</label>
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Every … months</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('every_months')}</span>
 			<input
 				bind:value={intervalMonths}
 				type="number"
@@ -92,11 +95,11 @@
 			/>
 		</label>
 	</div>
-	<p class="-mt-2 text-xs text-ink-faint">With both set, whichever comes first applies.</p>
+	<p class="-mt-2 text-xs text-ink-faint">{t('whichever_first')}</p>
 
 	<div class="grid grid-cols-2 gap-3">
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">Last done on</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('last_done_on')}</span>
 			<input
 				bind:value={anchorDate}
 				type="date"
@@ -104,7 +107,7 @@
 			/>
 		</label>
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">… at ({unit})</span>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">{t('at_unit', { unit })}</span>
 			<input
 				bind:value={anchorOdometer}
 				type="number"
@@ -115,7 +118,7 @@
 		</label>
 	</div>
 	<p class="-mt-2 text-xs text-ink-faint">
-		If you're not sure, leave today's values — tracking starts from now.
+		{t('anchor_hint')}
 	</p>
 
 	{#if error}

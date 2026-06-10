@@ -10,6 +10,7 @@
 	import { EMPTY_BUNDLE, vehicleBundle } from '$lib/queries';
 	import ItemForm, { type ItemFormValues } from '$lib/ui/ItemForm.svelte';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	const vehicleId = $derived(page.params.id!);
 	const isSetup = $derived(page.url.searchParams.get('setup') === '1');
@@ -33,16 +34,17 @@
 
 	async function addSelected() {
 		const today = todayLocal();
-		for (const t of BUILTIN_TEMPLATES) {
-			if (!selected.has(t.templateId)) continue;
+		for (const tmpl of BUILTIN_TEMPLATES) {
+			if (!selected.has(tmpl.templateId)) continue;
 			await create('maintenanceItems', {
 				vehicleId,
-				name: t.name,
-				intervalKm: t.intervalKm,
-				intervalMonths: t.intervalMonths,
+				// Stored resolved in the active language, like any custom item name.
+				name: t(tmpl.nameKey),
+				intervalKm: tmpl.intervalKm,
+				intervalMonths: tmpl.intervalMonths,
 				anchorDate: today,
 				anchorOdometer: odometer,
-				templateId: t.templateId
+				templateId: tmpl.templateId
 			});
 		}
 		goto(`/vehicle/${vehicleId}`);
@@ -54,39 +56,36 @@
 	}
 </script>
 
-<svelte:head><title>Add maintenance</title></svelte:head>
+<svelte:head><title>{t('add_maintenance')}</title></svelte:head>
 
 <PageHeader
-	title={isSetup ? 'What do you want to track?' : 'Add maintenance'}
+	title={isSetup ? t('what_to_track') : t('add_maintenance')}
 	back="/vehicle/{vehicleId}"
 />
 
 {#if isSetup}
-	<p class="-mt-2 mb-4 text-sm text-ink-faint">
-		Pick the maintenance you want reminders for — intervals are editable later.
-	</p>
+	<p class="-mt-2 mb-4 text-sm text-ink-faint">{t('setup_hint')}</p>
 {/if}
 
 <div class="flex flex-wrap gap-2">
-	{#each BUILTIN_TEMPLATES as t (t.templateId)}
-		{@const used = usedTemplates.has(t.templateId)}
+	{#each BUILTIN_TEMPLATES as tmpl (tmpl.templateId)}
+		{@const used = usedTemplates.has(tmpl.templateId)}
 		<button
 			type="button"
 			disabled={used}
-			onclick={() => toggle(t.templateId)}
+			onclick={() => toggle(tmpl.templateId)}
 			class="rounded-full border px-3.5 py-2 text-sm font-medium active:scale-95 disabled:opacity-40 {selected.has(
-				t.templateId
+				tmpl.templateId
 			)
 				? 'border-teal bg-teal-soft text-teal-deep'
 				: 'border-line bg-card text-ink-soft'}"
 		>
-			{t.name}
+			{t(tmpl.nameKey)}
 		</button>
 	{/each}
 </div>
 <p class="mt-2 text-xs text-ink-faint">
-	Selected items count as done today{odometer != null ? ` at the current odometer` : ''} — log a service
-	or edit the item to backdate.
+	{t('chips_anchor_hint', { at_odometer: odometer != null ? t('at_current_odometer') : '' })}
 </p>
 
 {#if selected.size > 0}
@@ -94,8 +93,7 @@
 		onclick={addSelected}
 		class="mt-4 w-full rounded-full bg-teal py-3 font-medium text-teal-soft active:scale-95"
 	>
-		Add {selected.size}
-		{selected.size === 1 ? 'item' : 'items'}
+		{selected.size === 1 ? t('add_n_items_one') : t('add_n_items', { n: selected.size })}
 	</button>
 {/if}
 
@@ -104,15 +102,15 @@
 		href="/vehicle/{vehicleId}"
 		class="mt-4 block w-full rounded-full border border-line bg-card py-3 text-center text-sm font-medium text-ink-soft active:scale-95"
 	>
-		Skip for now
+		{t('skip_for_now')}
 	</a>
 {/if}
 
 <div class="mt-8">
 	<button onclick={() => (showCustom = !showCustom)} class="mb-3 text-sm font-medium text-teal">
-		{showCustom ? '− Hide custom item' : '+ Custom item'}
+		{showCustom ? t('hide_custom') : t('show_custom')}
 	</button>
 	{#if showCustom}
-		<ItemForm {unit} defaultOdometer={odometer} submitLabel="Add item" onsubmit={addCustom} />
+		<ItemForm {unit} defaultOdometer={odometer} submitLabel={t('add_item')} onsubmit={addCustom} />
 	{/if}
 </div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let { title, back, action }: { title: string; back?: string; action?: Snippet } = $props();
 </script>
@@ -8,7 +9,7 @@
 	{#if back}
 		<a
 			href={back}
-			aria-label="Back"
+			aria-label={t('back')}
 			class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-card text-ink-soft active:scale-95"
 		>
 			<svg

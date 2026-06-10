@@ -11,6 +11,7 @@ import { computeDueStates } from '$lib/domain/due';
 import { lastMileagePointDate, mileagePoints } from '$lib/domain/mileage';
 import { diffDays, todayLocal } from '$lib/domain/time';
 import type { MaintenanceItem, MileageEntry, ServiceRecord, Vehicle } from '$lib/domain/types';
+import { isLocale } from '$lib/i18n/dict';
 import { pullSelect, REMOTE_TABLE } from '$lib/sync/shape';
 import { buildDigest, stateKey, type VehicleAttention } from './digest';
 
@@ -24,6 +25,7 @@ interface SubscriptionRow {
 	auth: string;
 	enabled: boolean;
 	mileage_reminder_days: number;
+	locale: string;
 	last_push_at: string | null;
 	last_push_state_hash: string | null;
 }
@@ -144,7 +146,7 @@ export async function runReminders(): Promise<ReminderRunSummary | { skipped: st
 		for (const sub of userSubs) {
 			const mileageDue = staleDaysPerVehicle.some((d) => d >= sub.mileage_reminder_days);
 			const hash = createHash('sha256').update(stateKey(attention, mileageDue)).digest('hex');
-			const digest = buildDigest(attention, mileageDue);
+			const digest = buildDigest(attention, mileageDue, isLocale(sub.locale) ? sub.locale : 'en');
 
 			const lastPushAge = sub.last_push_at
 				? (Date.now() - new Date(sub.last_push_at).getTime()) / 86_400_000
@@ -216,7 +218,8 @@ async function runDeviceSchedules(
 			continue;
 		}
 		const remaining = device.schedule.filter((e) => e.date > today);
-		const title = due.length === 1 ? due[0].title : 'Maintenance reminders';
+		// Entries arrive pre-localised from the client; reuse their title.
+		const title = due[0].title;
 		const body = due.map((e) => e.body).join('\n');
 
 		try {

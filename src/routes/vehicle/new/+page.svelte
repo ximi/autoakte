@@ -3,6 +3,7 @@
 	import { create } from '$lib/db/repo';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 	import VehicleForm, { type VehicleFormValues } from '$lib/ui/VehicleForm.svelte';
+	import { t } from '$lib/i18n/index.svelte';
 
 	async function save(v: VehicleFormValues) {
 		const vehicleId = await create('vehicles', {
@@ -24,7 +25,7 @@
 	}
 </script>
 
-<svelte:head><title>Add vehicle</title></svelte:head>
+<svelte:head><title>{t('add_vehicle')}</title></svelte:head>
 
-<PageHeader title="Add vehicle" back="/" />
-<VehicleForm showOdometer submitLabel="Add vehicle" onsubmit={save} />
+<PageHeader title={t('add_vehicle')} back="/" />
+<VehicleForm showOdometer submitLabel={t('add_vehicle')} onsubmit={save} />

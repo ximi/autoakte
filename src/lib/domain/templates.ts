@@ -23,10 +23,38 @@ export const BUILTIN_TEMPLATES: MaintenanceTemplate[] = [
 		source: 'builtin'
 	},
 	{
+		templateId: 'tyres-inspect',
+		name: 'Tyres (inspect tread & pressure)',
+		intervalKm: null,
+		intervalMonths: 6,
+		source: 'builtin'
+	},
+	{
+		templateId: 'brake-pads-inspect',
+		name: 'Brake pads (inspect)',
+		intervalKm: 10000,
+		intervalMonths: 12,
+		source: 'builtin'
+	},
+	{
 		templateId: 'brake-fluid',
 		name: 'Brake fluid',
 		intervalKm: null,
 		intervalMonths: 24,
+		source: 'builtin'
+	},
+	{
+		templateId: 'transmission-fluid',
+		name: 'Transmission fluid',
+		intervalKm: 60000,
+		intervalMonths: null,
+		source: 'builtin'
+	},
+	{
+		templateId: 'timing-belt',
+		name: 'Timing belt',
+		intervalKm: 100000,
+		intervalMonths: 72,
 		source: 'builtin'
 	},
 	{

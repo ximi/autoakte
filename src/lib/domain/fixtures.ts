@@ -31,6 +31,7 @@ export function makeRecord(over: Partial<ServiceRecord> = {}): ServiceRecord {
 		...stamps(),
 		vehicleId: 'v1',
 		itemId: 'i1',
+		title: null,
 		date: '2026-01-01',
 		odometer: 50000,
 		cost: null,

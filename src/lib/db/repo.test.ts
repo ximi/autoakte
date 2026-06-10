@@ -64,6 +64,7 @@ describe('removeVehicle', () => {
 		await create('serviceRecords', {
 			vehicleId,
 			itemId,
+			title: null,
 			date: '2026-06-01',
 			odometer: 50000,
 			cost: null,

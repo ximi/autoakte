@@ -39,7 +39,10 @@ export interface MaintenanceItem extends SyncStamps {
 
 export interface ServiceRecord extends SyncStamps {
 	vehicleId: string;
-	itemId: string;
+	/** Null for one-off services that aren't tied to a maintenance item. */
+	itemId: string | null;
+	/** Free-text description for one-off services (itemId null). */
+	title: string | null;
 	date: string; // YYYY-MM-DD
 	odometer: number;
 	cost: number | null;

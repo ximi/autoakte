@@ -8,10 +8,13 @@
 	import { EMPTY_BUNDLE, vehicleBundle } from '$lib/queries';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 
+	const ONE_OFF = '__one-off';
+
 	const vehicleId = $derived(page.params.id!);
 	const data = live(() => vehicleBundle(vehicleId), EMPTY_BUNDLE);
 
 	let itemId = $state(page.url.searchParams.get('item') ?? '');
+	let title = $state('');
 	let date = $state(todayLocal());
 	let odometer = $state<number | undefined>(undefined);
 	let cost = $state<number | undefined>(undefined);
@@ -26,7 +29,8 @@
 		if (!itemId) return;
 		await create('serviceRecords', {
 			vehicleId,
-			itemId,
+			itemId: itemId === ONE_OFF ? null : itemId,
+			title: itemId === ONE_OFF ? title.trim() : null,
 			date,
 			odometer: odometer ?? knownOdometer ?? 0,
 			cost: cost ?? null,
@@ -42,83 +46,89 @@
 
 <PageHeader title="Log service" back="/vehicle/{vehicleId}" />
 
-{#if data.value.items.length === 0}
-	<p class="text-sm text-ink-faint">
-		No maintenance items yet —
-		<a href="/vehicle/{vehicleId}/item/new" class="font-medium text-teal">add one first</a>.
-	</p>
-{:else}
-	<form onsubmit={save} class="flex flex-col gap-4">
-		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft">What was done?</span>
-			<select
-				bind:value={itemId}
-				required
-				class="w-full appearance-none rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-			>
-				<option value="" disabled>Choose…</option>
-				{#each data.value.items as item (item.id)}
-					<option value={item.id}>{item.name}</option>
-				{/each}
-			</select>
-		</label>
+<form onsubmit={save} class="flex flex-col gap-4">
+	<label class="block">
+		<span class="mb-1 block text-sm font-medium text-ink-soft">What was done?</span>
+		<select
+			bind:value={itemId}
+			required
+			class="w-full appearance-none rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
+		>
+			<option value="" disabled>Choose…</option>
+			{#each data.value.items as item (item.id)}
+				<option value={item.id}>{item.name}</option>
+			{/each}
+			<option value={ONE_OFF}>Something else (one-off service)</option>
+		</select>
+	</label>
 
-		<div class="grid grid-cols-2 gap-3">
-			<label class="block">
-				<span class="mb-1 block text-sm font-medium text-ink-soft">Date</span>
-				<input
-					bind:value={date}
-					type="date"
-					required
-					max={todayLocal()}
-					class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-				/>
-			</label>
-			<label class="block">
-				<span class="mb-1 block text-sm font-medium text-ink-soft">
-					Odometer ({data.value.vehicle?.odometerUnit ?? 'km'})
-				</span>
-				<input
-					bind:value={odometer}
-					type="number"
-					inputmode="numeric"
-					min="0"
-					placeholder={knownOdometer != null ? String(knownOdometer) : ''}
-					class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-				/>
-			</label>
-		</div>
-
+	{#if itemId === ONE_OFF}
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft"
-				>Cost <span class="font-normal text-ink-faint">(optional, €)</span></span
-			>
+			<span class="mb-1 block text-sm font-medium text-ink-soft">Describe the service</span>
 			<input
-				bind:value={cost}
-				type="number"
-				inputmode="decimal"
-				min="0"
-				step="0.01"
+				bind:value={title}
+				required
+				placeholder="e.g. Replaced windscreen"
 				class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
 			/>
 		</label>
+	{/if}
 
+	<div class="grid grid-cols-2 gap-3">
 		<label class="block">
-			<span class="mb-1 block text-sm font-medium text-ink-soft"
-				>Notes <span class="font-normal text-ink-faint">(optional)</span></span
-			>
-			<textarea
-				bind:value={notes}
-				rows="2"
+			<span class="mb-1 block text-sm font-medium text-ink-soft">Date</span>
+			<input
+				bind:value={date}
+				type="date"
+				required
+				max={todayLocal()}
 				class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
-			></textarea>
+			/>
 		</label>
+		<label class="block">
+			<span class="mb-1 block text-sm font-medium text-ink-soft">
+				Odometer ({data.value.vehicle?.odometerUnit ?? 'km'})
+			</span>
+			<input
+				bind:value={odometer}
+				type="number"
+				inputmode="numeric"
+				min="0"
+				placeholder={knownOdometer != null ? String(knownOdometer) : ''}
+				class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
+			/>
+		</label>
+	</div>
 
-		<button
-			type="submit"
-			class="mt-2 rounded-full bg-teal py-3 font-medium text-teal-soft active:scale-95"
+	<label class="block">
+		<span class="mb-1 block text-sm font-medium text-ink-soft"
+			>Cost <span class="font-normal text-ink-faint">(optional, €)</span></span
 		>
-			Save service
-		</button>
-	</form>
-{/if}
+		<input
+			bind:value={cost}
+			type="number"
+			inputmode="decimal"
+			min="0"
+			step="0.01"
+			class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
+		/>
+	</label>
+
+	<label class="block">
+		<span class="mb-1 block text-sm font-medium text-ink-soft"
+			>Notes <span class="font-normal text-ink-faint">(optional)</span></span
+		>
+		<textarea
+			bind:value={notes}
+			rows="2"
+			class="w-full rounded-xl border border-line bg-card px-3 py-2.5 outline-none focus:border-teal"
+		></textarea>
+	</label>
+
+	<button
+		type="submit"
+		class="mt-2 rounded-full bg-teal py-3 font-medium text-teal-soft active:scale-95"
+	>
+		Save service
+	</button>
+</form>

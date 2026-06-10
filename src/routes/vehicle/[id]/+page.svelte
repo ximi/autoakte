@@ -5,6 +5,7 @@
 	import { currentOdometer, estimateDailyRate, mileagePoints } from '$lib/domain/mileage';
 	import { todayLocal } from '$lib/domain/time';
 	import { dueLabel, formatDate, formatDistance } from '$lib/format';
+	import { toDateOnly } from '$lib/domain/time';
 	import { EMPTY_BUNDLE, vehicleBundle } from '$lib/queries';
 	import PageHeader from '$lib/ui/PageHeader.svelte';
 	import StatusBadge from '$lib/ui/StatusBadge.svelte';
@@ -30,10 +31,33 @@
 				)
 			: new Map()
 	);
-	const history = $derived(
-		[...data.value.records].sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 8)
-	);
 	const itemName = $derived(new Map(data.value.items.map((i) => [i.id, i.name])));
+	const history = $derived(
+		[
+			...data.value.records.map((r) => ({
+				id: r.id,
+				kind: 'service' as const,
+				date: r.date,
+				sortKey: `${r.date}~${r.createdAt}`,
+				label: r.itemId ? (itemName.get(r.itemId) ?? 'Service') : (r.title ?? 'Service'),
+				odometer: r.odometer,
+				cost: r.cost,
+				currency: r.currency
+			})),
+			...data.value.entries.map((e) => ({
+				id: e.id,
+				kind: 'mileage' as const,
+				date: toDateOnly(e.recordedAt),
+				sortKey: `${toDateOnly(e.recordedAt)}~${e.createdAt}`,
+				label: 'Odometer reading',
+				odometer: e.odometer,
+				cost: null,
+				currency: null
+			}))
+		]
+			.sort((a, b) => (a.sortKey < b.sortKey ? 1 : -1))
+			.slice(0, 12)
+	);
 	const sortedItems = $derived(
 		[...data.value.items].sort((a, b) => {
 			const sa = states.get(a.id)?.daysRemaining ?? Infinity;
@@ -109,20 +133,21 @@
 
 	{#if history.length > 0}
 		<section class="rounded-2xl border border-line bg-card p-4">
-			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">
-				Recent services
-			</h2>
+			<h2 class="mb-1 text-xs font-medium tracking-wide text-ink-faint uppercase">History</h2>
 			<ul class="divide-y divide-line-soft">
-				{#each history as record (record.id)}
+				{#each history as entry (entry.id)}
 					<li class="py-3">
 						<div class="flex items-center justify-between gap-2 text-sm">
-							<span class="min-w-0 truncate">{itemName.get(record.itemId) ?? 'Service'}</span>
-							<span class="shrink-0 text-ink-faint">{formatDate(record.date)}</span>
+							<span
+								class="min-w-0 truncate {entry.kind === 'mileage' ? 'text-ink-faint italic' : ''}"
+								>{entry.label}</span
+							>
+							<span class="shrink-0 text-ink-faint">{formatDate(entry.date)}</span>
 						</div>
 						<p class="mt-0.5 text-xs text-ink-faint">
-							{formatDistance(record.odometer, vehicle.odometerUnit)}
-							{#if record.cost != null}
-								· {record.cost.toLocaleString()} {record.currency ?? '€'}
+							{formatDistance(entry.odometer, vehicle.odometerUnit)}
+							{#if entry.cost != null}
+								· {entry.cost.toLocaleString()} {entry.currency ?? '€'}
 							{/if}
 						</p>
 					</li>

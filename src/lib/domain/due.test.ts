@@ -170,6 +170,25 @@ describe('anchor resolution', () => {
 		expect(single(item, records).dueDate).toBe('2026-01-01');
 	});
 
+	it('one-off records (no item) never anchor an item but their odometer counts', () => {
+		const item = makeItem({
+			id: 'i1',
+			intervalKm: 10000,
+			intervalMonths: null,
+			anchorOdometer: 50000
+		});
+		const oneOff = makeRecord({
+			itemId: null,
+			title: 'Replaced windscreen',
+			date: '2026-06-01',
+			odometer: 59500
+		});
+		const s = single(item, [oneOff]);
+		expect(s.dueOdometer).toBe(60000);
+		expect(s.kmRemaining).toBe(500);
+		expect(s.status).toBe('due_soon');
+	});
+
 	it('treats a never-done item as done at creation (no day-one nagging)', () => {
 		const item = makeItem({
 			id: 'i1',

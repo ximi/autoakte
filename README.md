@@ -41,6 +41,7 @@ npm run build && npm run preview   # production build incl. service worker
 ## Known limitations / risks
 
 - **iOS push** needs iOS ≥ 16.4 **and** the PWA installed to the Home Screen; permission must be requested from a user gesture; subscriptions die silently if the PWA is uninstalled (the cron's 404/410 cleanup is the only signal).
+- **iOS Safari "Notifications" feature flag**: if web pushes are accepted by APNs but never display (and iOS eventually revokes the subscription), check Settings → Apps → Safari → Advanced → Feature Flags → Notifications — it must be ON. Some iOS builds/updates leave it off; symptoms look identical to VPN/Focus issues.
 - **Vercel Hobby cron** runs once daily with up to ~59 min jitter — reminders are "morning-ish".
 - **Supabase free tier** pauses after ~7 idle days; the daily cron should keep it active, but check after the first quiet week.
 - **LWW clock skew**: a device with a wrong clock can win an edit conflict. Pull cursors use server time, so no data is ever skipped.

@@ -13,7 +13,12 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter({ runtime: 'nodejs22.x' })
+			adapter: adapter({ runtime: 'nodejs22.x' }),
+			// Absolute asset URLs: the service worker serves the prerendered "/"
+			// shell as the navigation fallback for ANY route, so relative paths
+			// (SvelteKit's default) would resolve against the wrong directory and
+			// blank-screen every SW-served deep link.
+			paths: { relative: false }
 		}),
 		SvelteKitPWA({
 			registerType: 'prompt',

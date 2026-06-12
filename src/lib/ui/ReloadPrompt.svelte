@@ -10,10 +10,12 @@
 
 	let busy = $state(false);
 
-	// Hand-rolled update flow: message the waiting worker directly and reload
-	// only once it has actually activated (registration.waiting clears). The
-	// vite-pwa helper re-fetches sw.js first, which on slow connections lets
-	// any fallback reload win the race and land back on the old version.
+	// Hand-rolled update flow: message the waiting worker and reload only once
+	// it has actually activated. WebKit (iOS) can silently drop messages sent
+	// to a worker that isn't running, so we keep re-sending while we wait; if
+	// it still won't activate, we replace the registration wholesale — the
+	// reload re-registers the new version, and ensurePushSubscription() on the
+	// next launch restores the push subscription that unregister() discards.
 	async function applyUpdate() {
 		busy = true;
 		const reg = await navigator.serviceWorker.getRegistration();
@@ -31,17 +33,30 @@
 		};
 
 		navigator.serviceWorker.addEventListener('controllerchange', reload, { once: true });
+		waiting.addEventListener('statechange', () => {
+			if (waiting.state === 'activated') reload();
+		});
 		waiting.postMessage({ type: 'SKIP_WAITING' });
 
-		// Fallback for browsers where controllerchange doesn't fire: the waiting
-		// slot clears when the new worker activates — then a reload picks it up.
 		const started = Date.now();
-		const timer = setInterval(() => {
-			if (!reg.waiting || Date.now() - started > 8000) {
+		const timer = setInterval(async () => {
+			if (reloaded) {
+				clearInterval(timer);
+				return;
+			}
+			if (!reg.waiting || waiting.state === 'activated') {
 				clearInterval(timer);
 				reload();
+				return;
 			}
-		}, 250);
+			if (Date.now() - started > 6000) {
+				clearInterval(timer);
+				await reg.unregister();
+				reload();
+				return;
+			}
+			waiting.postMessage({ type: 'SKIP_WAITING' });
+		}, 750);
 	}
 </script>
 

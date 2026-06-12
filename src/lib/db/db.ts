@@ -10,6 +10,8 @@ export interface Settings {
 	lastPullCursors: Record<string, string>;
 	/** Bearer secret identifying this device's accountless push schedule. */
 	pushDeviceToken: string;
+	/** Whether the user wants push on this device — drives silent re-subscribe. */
+	pushIntent: boolean;
 }
 
 export interface SettingRow<K extends keyof Settings = keyof Settings> {

@@ -118,13 +118,7 @@ async function uploadAccountSubscription(
 	return { error: error?.message ?? null };
 }
 
-/** Must be called from a user gesture (iOS requirement). Works signed-out. */
-export async function enablePush(): Promise<{ error: string | null }> {
-	if (!supabase) return { error: t('err_not_configured') };
-	if (!pushSupported()) return { error: t('err_push_unsupported') };
-	const permission = await Notification.requestPermission();
-	if (permission !== 'granted') return { error: t('err_permission_denied') };
-
+async function subscribeAndUpload(): Promise<{ error: string | null }> {
 	const reg = await navigator.serviceWorker.ready;
 	const sub = await reg.pushManager.subscribe({
 		userVisibleOnly: true,
@@ -132,11 +126,23 @@ export async function enablePush(): Promise<{ error: string | null }> {
 	});
 	const keys = subscriptionKeys(sub);
 	if (!keys) return { error: t('err_missing_keys') };
-
 	return (await isSignedIn()) ? uploadAccountSubscription(keys) : uploadDeviceSchedule(keys);
 }
 
+/** Must be called from a user gesture (iOS requirement). Works signed-out. */
+export async function enablePush(): Promise<{ error: string | null }> {
+	if (!supabase) return { error: t('err_not_configured') };
+	if (!pushSupported()) return { error: t('err_push_unsupported') };
+	const permission = await Notification.requestPermission();
+	if (permission !== 'granted') return { error: t('err_permission_denied') };
+
+	const result = await subscribeAndUpload();
+	if (!result.error) await setSetting('pushIntent', true);
+	return result;
+}
+
 export async function disablePush(): Promise<void> {
+	await setSetting('pushIntent', false);
 	const sub = await getSubscription();
 	if (!sub) return;
 	if (supabase) {
@@ -145,6 +151,21 @@ export async function disablePush(): Promise<void> {
 		if (token) await supabase.rpc('delete_device_schedule', { device_token: token });
 	}
 	await sub.unsubscribe();
+}
+
+/**
+ * Silently restore a lost push subscription — after the update flow's
+ * unregister fallback, or when iOS drops one. Only acts when the user
+ * explicitly enabled push on this device and permission is still granted
+ * (so no prompt can ever appear from here).
+ */
+export async function ensurePushSubscription(): Promise<void> {
+	if (!supabase || !pushSupported()) return;
+	if (Notification.permission !== 'granted') return;
+	if (!(await getSetting('pushIntent', false))) return;
+	if (await getSubscription()) return;
+	const { error } = await subscribeAndUpload();
+	if (error) console.error('push re-subscribe failed', error);
 }
 
 /**
@@ -210,7 +231,7 @@ export async function updateReminderDays(days: number): Promise<void> {
 /** Wire schedule refreshes; returns a cleanup function. Call once per app load. */
 export function startDeviceScheduleTriggers(): () => void {
 	if (!supabase) return () => {};
-	void refreshDeviceSchedule();
+	void ensurePushSubscription().then(() => refreshDeviceSchedule());
 
 	let debounce: ReturnType<typeof setTimeout> | undefined;
 	const offWrite = onLocalWrite(() => {

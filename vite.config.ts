@@ -43,6 +43,10 @@ export default defineConfig({
 				]
 			},
 			workbox: {
+				// The update flow (prompt → SKIP_WAITING → controllerchange → reload)
+				// needs the fresh SW to claim open pages, or the reload never fires.
+				clientsClaim: true,
+				skipWaiting: false,
 				importScripts: ['push-sw.js'],
 				globPatterns: ['**/*.{js,css,html,png,svg,ico,webmanifest}'],
 				// Offline deep links fall back to the prerendered app shell at /;

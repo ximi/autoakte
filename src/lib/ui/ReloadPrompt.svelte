@@ -7,6 +7,13 @@
 			console.error('Service worker registration failed', error);
 		}
 	});
+
+	function applyUpdate() {
+		void updateServiceWorker(true);
+		// iOS standalone PWAs sometimes miss the controllerchange-driven reload;
+		// after skip-waiting the next load gets the new SW either way.
+		setTimeout(() => window.location.reload(), 2000);
+	}
 </script>
 
 {#if $needRefresh}
@@ -16,7 +23,7 @@
 	>
 		<p class="text-sm">{t('update_available')}</p>
 		<button
-			onclick={() => updateServiceWorker(true)}
+			onclick={applyUpdate}
 			class="shrink-0 rounded-full bg-teal px-4 py-2 text-sm font-medium text-teal-soft active:scale-95"
 		>
 			{t('update')}
